@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" href="favicon.png">
+<title>SPACE DODGE DELUXE</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+overflow:hidden;
+background:black;
+color:white;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+}
+
+#ui{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+z-index:20;
+pointer-events:none;
+}
+
+#topBar{
+width:100%;
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+padding:18px;
+position:fixed;
+top:0;
+left:0;
+z-index:40;
+}
+
+#leftButtons{
+display:flex;
+gap:14px;
+}
+
+#rightButtons{
+display:flex;
+gap:14px;
+}
+
+.coolBtn{
+pointer-events:auto;
+cursor:pointer;
+width:130px;
+height:78px;
+border:none;
+border-radius:20px;
+color:white;
+font-weight:bold;
+font-size:16px;
+background:linear-gradient(145deg,#111,#1a1a1a);
+border:2px solid #ff00ff;
+box-shadow:
+0 0 12px cyan,
+0 0 28px magenta,
+inset 0 0 18px rgba(255,255,255,.12);
+transition:.15s;
+}
+
+.coolBtn:hover{
+transform:translateY(-4px) scale(1.05);
+box-shadow:
+0 0 22px cyan,
+0 0 50px magenta;
+}
+
+#titleBox{
+text-align:center;
+margin:auto;
+margin-top:-6px;
+width:560px;
+padding:16px;
+border-radius:22px;
+background:rgba(0,0,0,.45);
+border:2px solid cyan;
+box-shadow:
+0 0 18px cyan,
+0 0 50px rgba(0,255,255,.4);
+backdrop-filter:blur(5px);
+}
+
+#title{
+font-size:62px;
+font-weight:bold;
+color:#00f7ff;
+text-shadow:
+0 0 10px cyan,
+0 0 30px cyan,
+0 0 50px cyan;
+}
+
+#score,#combo,#high,#bossText{
+margin-top:6px;
+font-size:24px;
+}
+
+#combo{
+color:#ff44ff;
+}
+
+#high{
+color:#00ffff;
+}
+
+#bossText{
+color:red;
+font-weight:bold;
+}
+
+#powerGuide{
+position:fixed;
+left:18px;
+top:140px;
+width:290px;
+padding:18px;
+border-radius:18px;
+background:rgba(0,0,0,.45);
+border:2px solid cyan;
+box-shadow:
+0 0 14px cyan,
+0 0 30px rgba(0,255,255,.3);
+line-height:38px;
+font-size:19px;
+backdrop-filter:blur(5px);
+}
+
+#shopMenu{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:980px;
+padding:30px;
+border-radius:30px;
+background:linear-gradient(145deg,rgba(10,10,25,.97),rgba(0,0,0,.98));
+border:3px solid cyan;
+box-shadow:0 0 25px cyan,0 0 70px magenta;
+z-index:999;
+display:none;
+}
+
+#shopTitle{
+font-size:60px;
+font-weight:bold;
+color:cyan;
+text-align:center;
+margin-bottom:30px;
+text-shadow:0 0 15px cyan,0 0 35px cyan;
+}
+
+#shopCards{
+display:flex;
+gap:22px;
+justify-content:center;
+}
+
+.shopCard{
+width:200px;
+padding:18px;
+border-radius:20px;
+background:linear-gradient(145deg,rgba(30,30,40,.95),rgba(10,10,10,.98));
+border:2px solid white;
+text-align:center;
+box-shadow:0 0 15px rgba(255,255,255,.2);
+}
+
+.shopCard p{
+margin-top:18px;
+font-size:22px;
+}
+
+.shopCard button{
+margin-top:20px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:14px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+background:lime;
+color:black;
+}
+
+#shopClose{
+margin-top:35px;
+text-align:center;
+font-size:26px;
+font-weight:bold;
+padding:16px;
+border-radius:18px;
+background:#111;
+border:2px solid magenta;
+cursor:pointer;
+box-shadow:0 0 12px cyan,0 0 30px magenta;
+}
+
+.shipPreview{
+width:120px;
+height:80px;
+margin:auto;
+margin-top:10px;
+background:#45cfff;
+position:relative;
+clip-path:polygon(0% 35%,25% 35%,38% 0%,62% 0%,75% 35%,100% 35%,100% 62%,70% 62%,70% 78%,30% 78%,30% 62%,0% 62%);
+box-shadow:
+0 0 18px rgba(69,207,255,.8),
+inset 0 0 18px rgba(255,255,255,.15);
+}
+
+.shipPreview::before{
+content:'';
+position:absolute;
+left:44px;
+top:16px;
+width:32px;
+height:16px;
+background:black;
+border:2px solid #8cf3ff;
+transform:skewX(15deg);
+}
+
+.shipPreview::after{
+content:'';
+position:absolute;
+left:56px;
+top:-16px;
+width:10px;
+height:20px;
+background:#d8d8d8;
+box-shadow:0 0 10px white;
+}
+
+.speed1{
+transform:scale(.95);
+}
+
+.speed2{
+transform:scale(1.05);
+}
+
+.turret1::after{
+content:'';
+position:absolute;
+left:54px;
+top:-20px;
+width:12px;
+height:26px;
+background:#e8e8e8;
+box-shadow:0 0 10px white;
+}
+
+.turret2::after{
+content:'';
+position:absolute;
+left:20px;
+top:-20px;
+width:12px;
+height:26px;
+background:#e8e8e8;
+box-shadow:
+68px 0 #e8e8e8,
+0 0 10px white,
+68px 0 10px white;
+}
+
+#footer{
+position:fixed;
+bottom:16px;
+left:50%;
+transform:translateX(-50%);
+width:70%;
+padding:14px;
+text-align:center;
+border-radius:18px;
+border:2px solid magenta;
+background:rgba(0,0,0,.45);
+box-shadow:
+0 0 12px cyan,
+0 0 30px magenta;
+}
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+
+<div id="topBar">
+
+<div id="leftButtons">
+<button id="musicBtn" class="coolBtn">🎵 MUSIC</button>
+<button id="pauseBtn" class="coolBtn">⏸ PAUSE</button>
+</div>
+
+<div id="rightButtons">
+<button id="shopBtn" class="coolBtn">🛒 SHOP</button>
+<button id="downloadBtn" class="coolBtn">⬇ INSTALL</button>
+</div>
+
+</div>
+
+<div id="titleBox">
+<div id="title">SPACE DODGE DELUXE V</div>
+<div id="score">Score: 0</div>
+<div id="combo">Combo: x1</div>
+<div id="high">High Score: 0</div>
+<div id="bossText"></div>
+</div>
+
+</div>
+
+<div id="powerGuide">
+🟩 Green = combo<br>
+🟨 Yellow = 1 minute invincibility<br>
+🟦 Blue = survive one hit<br>
+🟥 Red = slow enemies<br>
+⬜ White = auto-gun mode for 1 minute
+</div>
+
+<div id="shopMenu">
+
+<div id="shopTitle">SHOP</div>
+
+<div id="shopCards">
+
+<div class="shopCard">
+<h2>Ship Upgrade</h2>
+<div class="shipPreview speed1"></div>
+<p>+15% Speed</p>
+<button id="buySpeed1">Price: 5 Combo</button>
+</div>
+
+<div class="shopCard">
+<h2>Ship Upgrade</h2>
+<div class="shipPreview speed2"></div>
+<p>+20% Speed</p>
+<button id="buySpeed2">Price: 10 Combo</button>
+</div>
+
+<div class="shopCard">
+<h2>Ship Upgrade</h2>
+<div class="shipPreview turret1"></div>
+<p>+1 Turret</p>
+<button id="buyTurret1">Price: 15 Combo</button>
+</div>
+
+<div class="shopCard">
+<h2>Ship Upgrade</h2>
+<div class="shipPreview turret2"></div>
+<p>+2 Turrets</p>
+<button id="buyTurret2">Price: 20 Combo</button>
+</div>
+
+</div>
+
+<div id="shopClose">CLOSE SHOP</div>
+
+</div>
+
+<div id="footer">
+★ SPACE DODGE DELUXE • 4 RANDOMIZED BOSSES • SAVE SYSTEM • INSTALL TO PLAY OFFLINE
+</div>
+
+<audio id="bgMusic" loop>
+<source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const scoreText = document.getElementById("score");
+const comboText = document.getElementById("combo");
+const highText = document.getElementById("high");
+const bossText = document.getElementById("bossText");
+
+/* MUSIC */
+
+const music = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("musicBtn");
+
+music.volume = 0.35;
+
+let musicOn = false;
+
+const pauseBtn = document.getElementById("pauseBtn");
+const shopBtn = document.getElementById("shopBtn");
+const shopMenu = document.getElementById("shopMenu");
+const shopClose = document.getElementById("shopClose");
+
+shopBtn.onclick = ()=>{
+paused = true;
+shopMenu.style.display = "block";
+};
+
+shopClose.onclick = ()=>{
+paused = false;
+shopMenu.style.display = "none";
+};
+
+function spendCombo(cost){
+if(player.combo >= cost){
+player.combo -= cost;
+return true;
+}
+return false;
+}
+
+document.getElementById("buySpeed1").onclick = ()=>{
+if(spendCombo(5)) player.speed *= 1.15;
+};
+
+document.getElementById("buySpeed2").onclick = ()=>{
+if(spendCombo(10)) player.speed *= 1.20;
+};
+
+document.getElementById("buyTurret1").onclick = ()=>{
+if(spendCombo(15)) extraTurrets = 1;
+};
+
+document.getElementById("buyTurret2").onclick = ()=>{
+if(spendCombo(20)) extraTurrets = 2;
+};
+
+pauseBtn.onclick = ()=>{
+
+paused = !paused;
+
+if(paused){
+pauseBtn.innerHTML = "▶ RESUME";
+}else{
+pauseBtn.innerHTML = "⏸ PAUSE";
+}
+};
+
+musicBtn.onclick = async()=>{
+
+if(!musicOn){
+await music.play();
+musicOn = true;
+musicBtn.innerHTML = "🔇 MUTE";
+}else{
+music.pause();
+musicOn = false;
+musicBtn.innerHTML = "🎵 MUSIC";
+}
+};
+
+/* INSTALL */
+
+document.getElementById("downloadBtn").onclick = ()=>{
+
+const a = document.createElement("a");
+a.href = "space dodge.zip";
+a.download = "space dodge.zip";
+a.click();
+};
+
+/* SAVE SYSTEM */
+
+let save = JSON.parse(localStorage.getItem("spaceDeluxeSave")) || {
+score:0,
+high:0,
+combo:1
+};
+
+/* PLAYER */
+
+const player = {
+x:canvas.width/2,
+y:canvas.height-140,
+w:44,
+h:44,
+speed:8,
+combo:save.combo || 1
+};
+
+let score = save.score || 0;
+let high = save.high || 0;
+
+/* ARRAYS */
+
+let enemies = [];
+let bullets = [];
+let enemyBullets = [];
+let particles = [];
+let powerups = [];
+let stars = [];
+
+/* STATES */
+
+let frame = 0;
+let shake = 0;
+let paused = false;
+let extraTurrets = 0;
+
+let shield = false;
+let invincible = false;
+let gunMode = false;
+let slowMode = false;
+
+let invincibleTimer = 0;
+let gunTimer = 0;
+let slowTimer = 0;
+
+/* KEYS */
+
+let keys = {};
+
+addEventListener("keydown",e=>keys[e.key]=true);
+addEventListener("keyup",e=>keys[e.key]=false);
+
+/* STARS */
+
+for(let i=0;i<260;i++){
+
+stars.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+size:Math.random()*2,
+speed:1+Math.random()*3
+});
+}
+
+/* PARTICLES */
+
+function explosion(x,y,color,count=40){
+
+for(let i=0;i<count;i++){
+
+particles.push({
+x:x,
+y:y,
+dx:(Math.random()-.5)*10,
+dy:(Math.random()-.5)*10,
+life:50,
+color:color
+});
+}
+}
+
+/* ENEMIES */
+
+function spawnEnemy(){
+
+const speed = Math.min(5 + score/25000,13);
+
+enemies.push({
+
+x:Math.random()*(canvas.width-50),
+y:-60,
+w:40,
+h:40,
+speed:speed,
+health:1,
+normal:true,
+boss:false
+});
+}
+
+/* FASTER SPAWNS OVER TIME */
+
+setInterval(()=>{
+
+spawnEnemy();
+
+if(score > 50000) spawnEnemy();
+if(score > 150000) spawnEnemy();
+if(score > 500000) spawnEnemy();
+
+},500);
+
+/* POWERUPS */
+
+function spawnPowerup(){
+
+const types=["green","yellow","blue","red","white"];
+
+const type = types[Math.floor(Math.random()*types.length)];
+
+powerups.push({
+x:Math.random()*canvas.width,
+y:-40,
+size:28,
+speed:4,
+type:type
+});
+}
+
+setInterval(spawnPowerup,10000);
+
+/* BOSSES */
+
+function spawnBoss(){
+
+const type = Math.ceil(Math.random()*4);
+
+bossText.innerHTML = "⚠ BOSS WAVE ⚠";
+
+/* BOSS 1 */
+
+if(type===1){
+
+enemies.push({
+x:canvas.width/2-180,
+y:-160,
+w:360,
+h:150,
+speed:2,
+health:999,
+boss:true,
+bossType:1,
+patrol:false
+});
+}
+
+/* BOSS 2 */
+
+if(type===2){
+
+enemies.push({
+x:canvas.width/2-160,
+y:-160,
+w:320,
+h:180,
+speed:2,
+health:999,
+boss:true,
+bossType:2,
+patrol:false,
+shootCooldown:0
+});
+}
+
+/* BOSS 3 */
+
+if(type===3){
+
+enemies.push({
+x:canvas.width/2-220,
+y:120,
+w:440,
+h:150,
+speed:5,
+health:5,
+boss:true,
+bossType:3,
+patrol:true,
+dir:1,
+shootCooldown:0
+});
+}
+
+/* BOSS 4 */
+
+if(type===4){
+
+enemies.push({
+x:canvas.width/2-320,
+y:90,
+w:640,
+h:180,
+speed:6,
+health:100,
+boss:true,
+bossType:4,
+patrol:true,
+dir:1,
+shootCooldown:0
+});
+}
+}
+
+setInterval(spawnBoss,70000);
+
+/* RESET */
+
+function resetGame(){
+
+shake = 25;
+
+explosion(player.x,player.y,"red",90);
+
+if(score > high){
+high = Math.floor(score);
+}
+
+/* SAVE HIGHSCORE */
+
+localStorage.setItem("spaceDeluxeSave",JSON.stringify({
+score:score,
+high:high,
+combo:player.combo
+}));
+
+setTimeout(()=>{
+alert("GAME OVER\nScore: " + Math.floor(score));
+},100);
+
+score = 0;
+player.combo = 1;
+
+bullets=[];
+enemyBullets=[];
+enemies=[];
+powerups=[];
+
+bossText.innerHTML="";
+}
+
+/* UPDATE */
+
+function update(){
+
+if(paused) return;
+
+frame++;
+
+/* PLAYER */
+
+if(keys["ArrowLeft"] || keys["a"]){
+player.x -= player.speed;
+}
+
+if(keys["ArrowRight"] || keys["d"]){
+player.x += player.speed;
+}
+
+player.x = Math.max(0,Math.min(canvas.width-player.w,player.x));
+
+/* STARS */
+
+for(let s of stars){
+
+s.y += s.speed;
+
+if(s.y > canvas.height){
+s.y = 0;
+s.x = Math.random()*canvas.width;
+}
+}
+
+/* ENEMIES */
+
+for(let e of enemies){
+
+if(e.patrol){
+
+/* PATROL BOSSES */
+
+e.x += e.speed * e.dir;
+
+if(e.x < 0 || e.x + e.w > canvas.width){
+e.dir *= -1;
+}
+
+}else{
+
+e.y += e.speed;
+}
+
+/* SLOW MODE */
+
+if(slowMode){
+e.speed *= 0.996;
+}
+
+/* BOSS SHOOTING */
+
+if(e.bossType===2 || e.bossType===3 || e.bossType===4){
+
+if(frame % 40 === 0){
+
+if(e.bossType===2){
+
+enemyBullets.push({
+x:e.x + e.w/2,
+y:e.y + e.h,
+w:8,
+h:30,
+speed:6,
+color:"blue"
+});
+}
+
+if(e.bossType===3){
+
+enemyBullets.push({
+x:e.x + 20,
+y:e.y + e.h,
+w:10,
+h:36,
+speed:10,
+color:"cyan"
+});
+
+enemyBullets.push({
+x:e.x + e.w - 30,
+y:e.y + e.h,
+w:10,
+h:36,
+speed:10,
+color:"cyan"
+});
+}
+
+if(e.bossType===4){
+
+for(let i=0;i<4;i++){
+
+enemyBullets.push({
+x:e.x + 80 + (i*140),
+y:e.y + e.h,
+w:12,
+h:40,
+speed:12,
+color:"white"
+});
+}
+}
+}
+}
+
+/* COLLISION */
+
+if(
+player.x < e.x + e.w &&
+player.x + player.w > e.x &&
+player.y < e.y + e.h &&
+player.y + player.h > e.y
+){
+
+if(invincible){
+continue;
+}
+
+if(shield){
+shield = false;
+e.dead = true;
+explosion(e.x,e.y,"cyan");
+continue;
+}
+
+resetGame();
+}
+}
+
+/* ENEMY BULLETS */
+
+for(let b of enemyBullets){
+
+b.y += b.speed;
+
+if(
+player.x < b.x + b.w &&
+player.x + player.w > b.x &&
+player.y < b.y + b.h &&
+player.y + player.h > b.y
+){
+
+if(invincible){
+continue;
+}
+
+if(shield){
+shield = false;
+b.dead = true;
+continue;
+}
+
+resetGame();
+}
+}
+
+enemyBullets = enemyBullets.filter(b=>!b.dead && b.y < canvas.height+50);
+
+/* POWERUPS */
+
+for(let p of powerups){
+
+p.y += p.speed;
+
+if(
+player.x < p.x + p.size &&
+player.x + player.w > p.x &&
+player.y < p.y + p.size &&
+player.y + player.h > p.y
+){
+
+if(p.type==="green"){
+player.combo += 2;
+explosion(p.x,p.y,"lime");
+}
+
+if(p.type==="yellow"){
+invincible = true;
+invincibleTimer = 60*60;
+explosion(p.x,p.y,"yellow");
+}
+
+if(p.type==="blue"){
+shield = true;
+explosion(p.x,p.y,"cyan");
+}
+
+if(p.type==="red"){
+slowMode = true;
+slowTimer = 60*10;
+explosion(p.x,p.y,"red");
+}
+
+if(p.type==="white"){
+gunMode = true;
+gunTimer = 60*60;
+explosion(p.x,p.y,"white");
+}
+
+p.dead = true;
+}
+}
+
+powerups = powerups.filter(p=>!p.dead && p.y < canvas.height+50);
+
+/* GUN MODE */
+
+if(gunMode){
+
+if(frame % 8 === 0){
+
+bullets.push({
+x:player.x + player.w/2 - 4,
+y:player.y,
+w:8,
+h:18,
+speed:14
+});
+
+if(extraTurrets >= 1){
+bullets.push({
+x:player.x - 8,
+y:player.y + 8,
+w:8,
+h:18,
+speed:14
+});
+}
+
+if(extraTurrets >= 2){
+bullets.push({
+x:player.x + player.w + 2,
+y:player.y + 8,
+w:8,
+h:18,
+speed:14
+});
+}
+}
+
+if(gunTimer > 0){
+gunTimer--;
+}else{
+gunMode = false;
+}
+}
+
+/* INVINCIBLE TIMER */
+
+if(invincible){
+
+if(invincibleTimer > 0){
+invincibleTimer--;
+}else{
+invincible = false;
+}
+}
+
+/* SLOW TIMER */
+
+if(slowMode){
+
+if(slowTimer > 0){
+slowTimer--;
+}else{
+slowMode = false;
+}
+}
+
+/* BULLETS */
+
+for(let b of bullets){
+
+b.y -= b.speed;
+
+for(let e of enemies){
+
+if(
+b.x < e.x + e.w &&
+b.x + b.w > e.x &&
+b.y < e.y + e.h &&
+b.y + b.h > e.y
+){
+
+b.dead = true;
+
+e.health--;
+
+explosion(b.x,b.y,"white",12);
+
+if(e.health <= 0){
+
+if(e.bossType===4){
+explosion(e.x+e.w/2,e.y+e.h/2,"white",240);
+shake = 40;
+}else{
+explosion(e.x,e.y,"orange",70);
+}
+
+e.dead = true;
+
+score += 10000;
+
+bossText.innerHTML = "";
+}
+}
+}
+}
+
+bullets = bullets.filter(b=>!b.dead && b.y > -40);
+
+enemies = enemies.filter(e=>!e.dead && e.y < canvas.height+300);
+
+/* PARTICLES */
+
+for(let p of particles){
+
+p.x += p.dx;
+p.y += p.dy;
+p.life--;
+}
+
+particles = particles.filter(p=>p.life>0);
+
+/* SCORE */
+
+score += 0.15 * player.combo;
+
+scoreText.innerHTML = "Score: " + Math.floor(score);
+comboText.innerHTML = "Combo: x" + player.combo.toFixed(1);
+highText.innerHTML = "High Score: " + Math.floor(high);
+
+/* AUTO SAVE */
+
+if(frame % 120 === 0){
+
+localStorage.setItem("spaceDeluxeSave",JSON.stringify({
+score:score,
+high:Math.max(high,score),
+combo:player.combo
+}));
+}
+}
+
+/* DRAW */
+
+function draw(){
+
+ctx.save();
+
+if(shake > 0){
+ctx.translate(Math.random()*shake-shake/2,Math.random()*shake-shake/2);
+shake *= .9;
+}
+
+ctx.fillStyle = "black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+/* STARS */
+
+ctx.fillStyle = "white";
+
+for(let s of stars){
+ctx.fillRect(s.x,s.y,s.size,s.size);
+}
+
+/* PLAYER */
+
+ctx.fillStyle =
+invincible ? "yellow" :
+shield ? "cyan" :
+gunMode ? "white" :
+"#39d5ff";
+
+ctx.fillRect(player.x,player.y,player.w,player.h);
+
+/* WINDSHIELD */
+
+ctx.fillStyle = "black";
+ctx.fillRect(player.x+8,player.y+8,28,12);
+
+ctx.strokeStyle = "white";
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.moveTo(player.x+22,player.y+8);
+ctx.lineTo(player.x+28,player.y+20);
+ctx.stroke();
+
+/* ENEMIES */
+
+for(let e of enemies){
+
+if(!e.boss){
+
+ctx.fillStyle = "magenta";
+ctx.fillRect(e.x,e.y,e.w,e.h);
+
+ctx.fillStyle = "black";
+ctx.fillRect(e.x+8,e.y+8,24,10);
+
+ctx.strokeStyle = "white";
+ctx.beginPath();
+ctx.moveTo(e.x+20,e.y+8);
+ctx.lineTo(e.x+28,e.y+18);
+ctx.stroke();
+
+}else{
+
+/* BOSS COLORS */
+
+if(e.bossType===1) ctx.fillStyle="red";
+if(e.bossType===2) ctx.fillStyle="blue";
+if(e.bossType===3) ctx.fillStyle="cyan";
+if(e.bossType===4) ctx.fillStyle="white";
+
+ctx.fillRect(e.x,e.y,e.w,e.h);
+
+/* WINDSHIELD */
+
+ctx.fillStyle = "black";
+ctx.fillRect(e.x+e.w*.25,e.y+25,e.w*.5,55);
+
+ctx.strokeStyle = "white";
+ctx.lineWidth = 4;
+
+ctx.beginPath();
+ctx.moveTo(e.x+e.w*.55,e.y+25);
+ctx.lineTo(e.x+e.w*.65,e.y+80);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(e.x+e.w*.65,e.y+25);
+ctx.lineTo(e.x+e.w*.75,e.y+80);
+ctx.stroke();
+
+/* TURRETS */
+
+ctx.fillStyle = "gray";
+
+if(e.bossType===2){
+ctx.fillRect(e.x+e.w/2-15,e.y+e.h-10,30,60);
+}
+
+if(e.bossType===3){
+ctx.fillRect(e.x+20,e.y+20,45,70);
+ctx.fillRect(e.x+e.w-65,e.y+20,45,70);
+}
+
+if(e.bossType===4){
+
+/* SIDE WINGS */
+ctx.fillStyle = "#dcdcdc";
+
+ctx.fillRect(e.x-120,e.y+20,120,90);
+ctx.fillRect(e.x+e.w,e.y+20,120,90);
+
+/* CONNECTORS */
+ctx.fillRect(e.x-10,e.y+45,10,18);
+ctx.fillRect(e.x+e.w,e.y+45,10,18);
+
+/* MAIN BODY */
+ctx.fillRect(e.x,e.y,e.w,e.h);
+
+/* FRONT GUN PLATFORM */
+ctx.fillRect(e.x-80,e.y+e.h-35,70,35);
+ctx.fillRect(e.x+e.w+10,e.y+e.h-35,70,35);
+
+/* BOTTOM GUN PLATFORM */
+ctx.fillRect(e.x+90,e.y+e.h-10,80,30);
+ctx.fillRect(e.x+220,e.y+e.h-10,80,30);
+
+/* WINDSHIELD */
+ctx.fillStyle = "black";
+ctx.fillRect(e.x+120,e.y+28,220,58);
+
+ctx.strokeStyle = "white";
+ctx.lineWidth = 5;
+
+ctx.beginPath();
+ctx.moveTo(e.x+250,e.y+28);
+ctx.lineTo(e.x+285,e.y+86);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(e.x+285,e.y+28);
+ctx.lineTo(e.x+320,e.y+86);
+ctx.stroke();
+
+/* TURRETS */
+
+function turret(tx,ty){
+
+ctx.fillStyle = "#444";
+ctx.fillRect(tx,ty,34,34);
+
+ctx.fillStyle = "#888";
+ctx.fillRect(tx+6,ty+6,22,22);
+
+ctx.fillStyle = "#111";
+ctx.fillRect(tx+13,ty+28,8,46);
+}
+
+/* LEFT SIDE */
+turret(e.x-90,e.y+35);
+turret(e.x-40,e.y+95);
+
+/* CENTER */
+turret(e.x+120,e.y+145);
+turret(e.x+210,e.y+145);
+
+/* RIGHT SIDE */
+turret(e.x+e.w+10,e.y+95);
+turret(e.x+e.w+60,e.y+35);
+}
+}
+}
+
+/* POWERUPS */
+
+for(let p of powerups){
+
+if(p.type==="green") ctx.fillStyle="lime";
+if(p.type==="yellow") ctx.fillStyle="yellow";
+if(p.type==="blue") ctx.fillStyle="cyan";
+if(p.type==="red") ctx.fillStyle="red";
+if(p.type==="white") ctx.fillStyle="white";
+
+ctx.fillRect(p.x,p.y,p.size,p.size);
+}
+
+/* BULLETS */
+
+ctx.fillStyle = "white";
+
+for(let b of bullets){
+ctx.fillRect(b.x,b.y,b.w,b.h);
+}
+
+/* ENEMY BULLETS */
+
+for(let b of enemyBullets){
+ctx.fillStyle = b.color;
+ctx.fillRect(b.x,b.y,b.w,b.h);
+}
+
+/* PARTICLES */
+
+for(let p of particles){
+ctx.fillStyle = p.color;
+ctx.fillRect(p.x,p.y,4,4);
+}
+
+/* TIMERS */
+
+ctx.fillStyle = "white";
+ctx.font = "22px Arial";
+
+if(invincible){
+ctx.fillText("INVINCIBLE: " + Math.ceil(invincibleTimer/60),20,canvas.height-120);
+}
+
+if(gunMode){
+ctx.fillText("GUN MODE: " + Math.ceil(gunTimer/60),20,canvas.height-90);
+}
+
+if(shield){
+ctx.fillText("SHIELD READY",20,canvas.height-60);
+}
+
+if(slowMode){
+ctx.fillText("SLOW ENEMIES",20,canvas.height-30);
+}
+
+ctx.restore();
+}
+
+/* LOOP */
+
+function loop(){
+update();
+draw();
+requestAnimationFrame(loop);
+}
+
+loop();
+
+/* RESIZE */
+
+addEventListener("resize",()=>{
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+});
+
+</script>
+</body>
+</html>
+```
